@@ -25,8 +25,11 @@ def hello_world(request):
 
 @api_view(['GET'])
 def news_list(request):
+    search = request.GET.get('search', '')
+
     # get all news
-    news = News.objects.all()
+    news = News.objects.select_related('category').prefetch_related(
+        'tags', 'comments').filter(title__icontains=search)
     # SELECT * FROM news_news;
 
     # serialize news
@@ -40,7 +43,10 @@ def news_detail(request, news_id):
     try:
         news = News.objects.get(id=news_id)
     except News.DoesNotExist:
-        return Response({'ERROR': f"Новости с id {news_id} не существует"})
+        return Response(
+            {'ERROR': f"Новости с id {news_id} не существует"},
+            status=404
+            )
 
     serializer = NewsDetailSerializer(instance=news, many=False)
 

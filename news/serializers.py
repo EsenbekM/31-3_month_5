@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from news.models import News, Comment
+from news.models import News, Comment, Category, Tag
 
 
 # class NewsSerializer(serializers.Serializer):
@@ -12,19 +12,45 @@ from news.models import News, Comment
 #     # updated_at = serializers.DateTimeField()
 
 
-class NewsListSerializer(serializers.ModelSerializer):
+class CategorySerializer(serializers.ModelSerializer):
     class Meta:
-        model = News
-        fields = ('id', 'title', 'content', 'view_count',)
+        model = Category
+        fields = ('id', 'name')
 
 
-class NewsDetailSerializer(serializers.ModelSerializer):
+class TagSerializer(serializers.ModelSerializer):
     class Meta:
-        model = News
-        fields = '__all__'
+        model = Tag
+        fields = ('id', 'name')
 
 
 class CommentListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = "__all__"
+
+
+class NewsListSerializer(serializers.ModelSerializer):
+    category = CategorySerializer()
+    tags = TagSerializer(many=True)
+    comments = CommentListSerializer(many=True)
+    # category_name = serializers.CharField(source='category.name')
+    category_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = News
+        fields = ('id', 'title', 'content', 'comments', 'view_count', 
+                  'category', 'tags', 'created_at', 'updated_at',
+                  'category_name', 'category_str')
+
+    def get_category_name(self, news):
+        if news.category:
+            return news.category.name
+        return None
+    
+
+class NewsDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = News
+        fields = '__all__'
+
