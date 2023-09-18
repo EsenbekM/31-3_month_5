@@ -23,22 +23,45 @@ def hello_world(request):
     return Response(dct)
 
 
-@api_view(['GET'])
+@api_view(['GET', 'POST'])
 def news_list(request):
-    search = request.GET.get('search', '')
+    if request.method == "GET":
+        search = request.GET.get('search', '')
+        # get all news
+        news = News.objects.select_related('category').prefetch_related(
+            'tags', 'comments').filter(title__icontains=search)
+        # SELECT * FROM news_news;
+        # serialize news
+        data = NewsListSerializer(instance=news, many=True).data
+        return Response(data, status=200)
 
-    # get all news
-    news = News.objects.select_related('category').prefetch_related(
-        'tags', 'comments').filter(title__icontains=search)
-    # SELECT * FROM news_news;
+    elif request.method == "POST":
+        title = request.data.get('title')
+        content = request.data.get('content')
+        category_id = request.data.get('category_id')
+        tags = request.data.get('tags', [])
+        
+        news = News.objects.create(
+            title=title, 
+            content=content,
+            category_id=category_id,
+            )
+        
+        # 1 способ
+        news.tags.set(tags)
+        
+        # 2 способ
+        # for tag_id in tags:
+        #     news.tags.add(tag_id)
+        
+        # 3 способ
+        # news.tags.add(*tags)
+        
+        data = NewsListSerializer(instance=news, many=False).data
+        return Response(data, status=201)
 
-    # serialize news
-    data = NewsListSerializer(instance=news, many=True).data
 
-    return Response(data)
-
-
-@api_view(['GET'])
+@api_view(['GET', 'PUT', 'DELETE'])
 def news_detail(request, news_id):
     try:
         news = News.objects.get(id=news_id)
@@ -48,10 +71,25 @@ def news_detail(request, news_id):
             status=404
             )
 
-    serializer = NewsDetailSerializer(instance=news, many=False)
+    if request.method == "GET":
+        serializer = NewsDetailSerializer(instance=news, many=False)
+        return Response(serializer.data, status=200)
 
-    return Response(serializer.data)
+    elif request.method == "PUT":
+        news.title = request.data.get('title', news.title)
+        news.content = request.data.get('content', news.content)
+        news.category_id = request.data.get('category_id', news.category_id)
+        news.tags.set(request.data.get('tags', news.tags.all()))
+        news.save()
 
+        data = NewsListSerializer(instance=news, many=False).data
+
+        return Response(data, status=200)
+    
+    elif request.method == "DELETE":
+        news.delete()
+        return Response(status=204)
+    
 
 @api_view(['GET'])
 def comment_list(request):
