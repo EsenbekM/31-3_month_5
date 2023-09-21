@@ -54,3 +54,58 @@ class NewsDetailSerializer(serializers.ModelSerializer):
         model = News
         fields = '__all__'
 
+
+
+class NewsValidateSerializer(serializers.Serializer):
+    title = serializers.CharField(max_length=255)
+    content = serializers.CharField(required=False)
+    is_active = serializers.BooleanField(required=False)
+    category_id = serializers.IntegerField()
+    tags = serializers.ListField(
+        child=serializers.IntegerField()
+    )
+
+    def validate_category_id(self, value):
+        try:
+            Category.objects.get(id=value)
+        except Category.DoesNotExist as e:
+            raise serializers.ValidationError(str(e))
+        
+        return value
+    
+    def validate_tags(self, value: list):
+        for tag_id in value:
+            try:
+                Tag.objects.get(id=tag_id)
+            except Tag.DoesNotExist as e:
+                raise serializers.ValidationError(str(e))
+        
+        return value
+
+    def create(self, validated_data):
+        title = validated_data.get('title')
+        content = validated_data.get('content')
+        is_active = validated_data.get('is_active')
+        category_id = validated_data.get('category_id')
+        tags = validated_data.get('tags')
+        
+        news = News.objects.create(
+            title=title, 
+            content=content,
+            category_id=category_id,
+            is_active=is_active
+            )
+        
+        news.tags.set(tags)
+
+        return news
+    
+
+    def update(self, instance, validated_data):
+        instance.title = validated_data.get('title', instance.title)
+        instance.content = validated_data.get('content', instance.content)
+        instance.category_id = validated_data.get('category_id', instance.category_id)
+        instance.tags.set(validated_data.get('tags', instance.tags.all()))
+        instance.save()
+
+        return instance
