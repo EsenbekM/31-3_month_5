@@ -1,13 +1,9 @@
 from django.contrib import admin
-from django.urls import path
-from news import views
+from django.urls import path, include
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/v1/test/', views.hello_world),
-
-    path('api/v1/news/', views.news_list), # GET -> list, POST -> create
-    path('api/v1/news/<int:news_id>/', views.news_detail), # GET -> retrieve, PUT -> update, DELETE -> delete
-
-    path('api/v1/comments/', views.comment_list),
+    path('api/v1/news/', include('news.urls')),
+    path('api/v1/users/', include('users.urls')),
 ]
