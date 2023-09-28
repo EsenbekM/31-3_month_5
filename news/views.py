@@ -1,11 +1,38 @@
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from django.contrib.auth.models import User
-from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.mixins import ListModelMixin, CreateModelMixin, RetrieveModelMixin
+from rest_framework.viewsets import ModelViewSet, GenericViewSet
 
-from news.models import News, Comment
+from news.models import News, Comment, Category, Tag
 from news.serializers import NewsListSerializer, NewsDetailSerializer, \
-      CommentListSerializer, NewsValidateSerializer
+      CommentListSerializer, NewsValidateSerializer, CategorySerializer, TagSerializer
+    
+
+class TagViewSet(GenericViewSet, ListModelMixin, RetrieveModelMixin, CreateModelMixin):
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+    lookup_field = 'id'
+    
+
+class CategoryListCreateAPIView(ListCreateAPIView):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ['name',]
+    ordering_fields = ['name', 'id']
+    # permission_classes = [IsAuthenticated]
+    # pagination_class = None
+
+
+class CategoryDetailAPIView(RetrieveUpdateDestroyAPIView):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    lookup_field = 'id'
+    
 
 
 @api_view(['GET'])
