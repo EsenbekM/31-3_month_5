@@ -11,7 +11,8 @@ class NewsAdmin(admin.ModelAdmin):
     list_editable = ('is_active',)
     list_filter = ('is_active', 'category')
     readonly_fields = ('view_count', 'created_at', 'updated_at')
-    fields = ('title', 'content', 'is_active', 'category', 'tags', 'view_count', 'created_at', 'updated_at')
+    fields = ('title', 'slug', 'content', 'is_active', 'category', 'tags', 'view_count', 'created_at', 'updated_at')
+    prepopulated_fields = {'slug': ('title',), }
 
     def has_add_permission(self, request: HttpRequest) -> bool:
         return True

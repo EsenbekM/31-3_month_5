@@ -13,9 +13,17 @@ from news.serializers import NewsListSerializer, NewsDetailSerializer, \
     
 
 class TagViewSet(GenericViewSet, ListModelMixin, RetrieveModelMixin, CreateModelMixin):
+    '''Вьюсет для тегов'''
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     lookup_field = 'id'
+
+
+    # def get_queryset(self):
+    #     queryset = super().get_queryset()
+    #     search = self.request.GET.get('search', '')
+    #     queryset = queryset.filter(name__icontains=search)
+    #     return queryset
     
 
 class CategoryListCreateAPIView(ListCreateAPIView):
@@ -26,6 +34,10 @@ class CategoryListCreateAPIView(ListCreateAPIView):
     ordering_fields = ['name', 'id']
     # permission_classes = [IsAuthenticated]
     # pagination_class = None
+
+    # def list(self, request, *args, **kwargs):
+    #     serializer = TagSerializer(instance=self.get_queryset(), many=True)
+    #     return Response(serializer.data)
 
 
 class CategoryDetailAPIView(RetrieveUpdateDestroyAPIView):
@@ -79,12 +91,13 @@ def news_list(request):
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
-def news_detail(request, news_id):
+def news_detail(request, slug):
+    '''Получение, обновление и удаление новости'''
     try:
-        news = News.objects.get(id=news_id)
+        news = News.objects.get(slug=slug)
     except News.DoesNotExist:
         return Response(
-            {'ERROR': f"Новости с id {news_id} не существует"},
+            {'ERROR': f"Новость {slug} не существует"},
             status=404
             )
 
