@@ -4,7 +4,7 @@
 venv/
 
 # Файлы миграции базы данных
-*/migrations/
+*/migrations/0*.py
 
 # Файлы секретных настроек
 *.secret
