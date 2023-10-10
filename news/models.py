@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 from django.db import models
 import uuid
 
@@ -44,7 +45,13 @@ class News(BaseModel):
         if self.category:
             return self.category.name
         return None
-
+    
+    def save(self, *args, **kwargs):
+        # change format image
+        self.image = self.image.name.replace('.jpg', '.wbp')
+        
+        super().save(*args, **kwargs)
+        
 
 class Comment(BaseModel):
     news = models.ForeignKey(News, on_delete=models.CASCADE, related_name='comments')
